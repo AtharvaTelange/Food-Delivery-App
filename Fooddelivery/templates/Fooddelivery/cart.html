@@ -1,0 +1,101 @@
+{% extends 'Fooddelivery/base.html' %}
+{% load static %}
+{% block content %}
+    <section class="home-slider owl-carousel">
+
+      <div class="slider-item" style="background-image: url('{% static 'Fooddelivery/images/bg_3.jpg' %}');" data-stellar-background-ratio="0.5">
+      	<div class="overlay"></div>
+        <div class="container">
+          <div class="row slider-text justify-content-center align-items-center">
+
+            <div class="col-md-7 col-sm-12 text-center ftco-animate">
+            	<h1 class="mb-3 mt-5 bread">Cart</h1>
+	            <p class="breadcrumbs"><span class="mr-2"><a href="../">Home</a></span> <span>Cart</span></p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+		
+		{% if product_count > 0 %}
+		<section class="ftco-section ftco-cart">
+			<div class="container">
+				<div class="row">
+    			<div class="col-md-12 ftco-animate">
+    				<div class="cart-list" style="overflow-x: hidden;">
+	    				<table class="table">
+						    <thead class="thead-primary">
+						      <tr class="text-center">
+						      	<th>&nbsp;</th>
+						        <th>&nbsp;</th>
+						        <th>Product</th>
+						        <th>Price per item</th>
+						        <th>Change Quantity</th>
+						        <th>&nbsp;</th>
+						        <th>Quantity</th>
+						        <th>Total Price</th>
+						      </tr>
+						    </thead>
+						    <tbody>
+						    {% for item in cart_items %}
+						      <tr class="text-center">
+						      	<form method="post" action="{% url 'remove_item' item.id %}">
+						      		{% csrf_token %}
+						        <td class="product-remove">
+						        		<button type="submit" style="background:none;outline:none; border:none !important;"><a><span class="icon-close"></span></a></button>
+						    	</td>
+						        </form>
+						        <td class="image-prod"><div class="img" style="background-image:url('{{ ' /static/Fooddelivery/' }}{{ item.product.image }}');"></div></td>
+						        
+						        <td class="product-name">
+						        	<h3>{{ item.product.name }}</h3>
+						        	<p>{{ item.product.description }}</p>
+						        </td>
+						        
+						        <td class="price">${{ item.product.price }}</td>
+
+						        <form method="post" action="{% url 'adjust_cart' item.id %}">
+						        	{% csrf_token %}
+						        	<td class="quantity">
+					             			<input type="number" name="quantity" class="quantity form-control" min="0" max="100" placeholder="Type a number">
+					          		</td>
+					          		<td>
+					          			<button class="btn btn-primary btn-outline-primary" type="submit" style="padding: 10px 10px;">Add to Cart</button>
+					          		</td>
+						        </form>
+						        <td>
+						        	<p>{{ item.quantity }}</p>
+						        </td>
+						        <td>
+						        	<p>${{ item.product_total_price }}</p>
+						        </td>
+						      </tr>
+						      {% endfor %}
+						    </tbody>
+						  </table>
+					  </div>
+    			</div>
+    		</div>
+    		<div class="row justify-content-end">
+    			<div class="col col-lg-3 col-md-6 mt-5 cart-wrap ftco-animate">
+    				<div class="cart-total mb-3">
+    					<h3>Cart Totals</h3>
+    					<p class="d-flex">
+    						<span>Total</span>
+    						<span>${{ total }}</span>
+    					</p>
+    				</div>
+    				<p class="text-center"><a href="../checkout" class="btn btn-primary py-3 px-4">Proceed to Checkout</a></p>
+    			</div>
+    		</div>
+		</div>
+	</section>
+	{% else %}
+	<div class='container' style="text-align: center;">
+		<h2 class="mb-3 mt-5 bread" >Choose products in order to fill the cart</h2>
+		<p class="text-center"><a href="../shop" class="btn btn-primary py-3 px-4">Do Shopping</a></p>
+	</div>
+	{% endif %}
+
+{% endblock content %}
