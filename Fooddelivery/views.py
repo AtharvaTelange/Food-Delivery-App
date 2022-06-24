@@ -1,9 +1,12 @@
 from django.shortcuts import render, redirect, reverse, HttpResponseRedirect
-from .models import menu
+from .models import menu, OrderModel
+from django.shortcuts import get_object_or_404
+from django.core.mail import send_mail
 from django.contrib import auth, messages
 from django.template.context_processors import csrf
 from .forms import UserRegistrationForm, UserLoginForm
 from django.contrib.auth.decorators import login_required
+
 # Create your views here.
 
 def home(request):
@@ -50,7 +53,8 @@ def register(request):
         if user_form.is_valid():
             user_form.save()
 
-            user = auth.authenticate(username=request.POST.get('username'),password=request.POST.get('password1'))
+            user = auth.authenticate(username=request.POST.get('username'),password=request.POST.get('password1'), 
+                first_name=request.POST.get('first_name'), last_name=request.POST.get('last_name'))
 
             if user is not None:
                 auth.login(request, user)
@@ -98,7 +102,7 @@ def adjust_cart(request, id):
     amount
     """
     quantity = int(request.POST.get('quantity'))
-    cart = request.session.get('cart', {})
+    cart = request.session.get('cart',{})
 
     if quantity > 0:
         cart[id] = quantity
@@ -108,20 +112,58 @@ def adjust_cart(request, id):
 
 @login_required(login_url="/login/")
 def remove_item(request,id):
-    cart = request.session.get('cart', {})
+    cart = request.session.get('cart',{})
     cart.pop(str(id))
     request.session['cart'] = cart
     return redirect(reverse('cart'))
 
 @login_required(login_url="/login/")
 def purchase_complete(request):
+    cart = request.session.get('cart',{})
+    firstname = request.user.first_name
+    lastname = request.user.last_name
+    email = request.user.email
+    street = request.POST.get('street')
+    city = request.POST.get('city')
+    state = request.POST.get('state')
+    zip_code = request.POST.get('zip')
+    phone = request.POST.get('phone')
+    username = request.user.get_username()
 
-    cart = request.session.get('cart', {})
-    cart = {}
     total = 0
-    product_count = 0
-    discount = 0
-    net = 0
-    request.session['cart'] = cart
+    item_ids= []
+    for id, quantity in cart.items():
+        item_ids.append(id)
+        product = get_object_or_404(menu, pk=id)
+        total = total + int(quantity)*product.price
+
+    order = OrderModel.objects.create(
+        price=total,
+        firstname=firstname,
+        lastname=lastname,
+        username = username,
+        email=email,
+        street=street,
+        city=city,
+        state=state,
+        zip_code=zip_code,
+        phone=phone,
+    )
+    order.items.add(*item_ids)
     messages.success(request,"Purchase completed!")
-    return redirect(reverse('index'),{'product_count':product_count, 'total':total, 'discount':discount,'net':net})
+
+    #sending a confirmation email
+    body = ('Thank you for your order! Your food is being made and will be delivered soon!\n'
+                f'Your total: $ {total}\n'
+                'Thank you again for your order!')
+
+    send_mail(
+        'Thank You For Your Order!',
+        body,
+        'no_reply_coffeeblend@gmail.com',
+        [email],
+        fail_silently=False
+    )
+
+    request.session['cart'] = {}
+    return redirect(reverse('index'))
