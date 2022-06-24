@@ -1,0 +1,16 @@
+asgiref==3.5.2
+backports.zoneinfo==0.2.1
+beautifulsoup4==4.11.1
+Django==4.0.5
+django-appconf==1.0.5
+django-compressor==4.0
+django-htmlmin==0.11.0
+html5lib==1.1
+Pillow==9.1.1
+python-memcached==1.59
+rcssmin==1.1.0
+rjsmin==1.2.0
+six==1.16.0
+soupsieve==2.3.2.post1
+sqlparse==0.4.2
+webencodings==0.5.1
